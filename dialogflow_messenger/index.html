@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width-device-width, initial-scale=1" />
+    <title>お問い合わせ</title>
+    <style>
+      div {
+        display: flex;
+        justify-content: center;
+      }
+      df-messenger {
+        --df-messenger-bot-message: #878fac;
+        --df-messenger-button-titlebar-color: #df9b56;
+        --df-messenger-chat-background-color: #fafafa;
+        --df-messenger-font-color: white;
+        --df-messenger-send-icon: #878fac;
+        --df-messenger-user-message: #479b3d;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+      <df-messenger
+        intent="WELCOME"
+        chat-title="浦芝商店街.comお問い合わせチャット"
+        agent-id="cc5843ee-80a7-4a38-9077-3b5acdbab7c1"
+        language-code="ja"
+        expand="true"
+      ></df-messenger>
+    </div>
+  </body>
+</html>

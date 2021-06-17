@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>電子投票システム</title>
+<h1>投票ページ</h1>
+<script type="text/javascript" src="js/sha256.js"></script>
+<script type="text/javascript">
+
+
+function Blockchain() {
+    this.chain = [];
+    this.pendingTransactions = [];
+    this.createNewBlock(100, "0", "0");
+    
+}
+
+Blockchain.prototype.createNewBlock = function(nonce, previousBlockHash, hash) {
+    const newBlock = {
+        index: this.chain.length + 1,
+        timestamp: Date.now(),
+        transactions: this.pendingTransactions,
+        nonce: nonce,
+        hash: hash,
+        previousBlockHash: previousBlockHash
+    };
+    this.pendingTransactions = [];
+    this.chain.push(newBlock);
+    return newBlock;
+};
+
+Blockchain.prototype.getLastBlock = function() {
+    return this.chain[this.chain.length - 1];
+};
+
+Blockchain.prototype.createNewTransaction = function(id, name) {
+    const newTransaction = {
+        id: id,
+        recepient: name
+    };
+    this.pendingTransactions.push(newTransaction);
+    return this.getLastBlock()["index"] + 1;
+};
+
+Blockchain.prototype.hashBlock = function(previousBlockHash, currentBlockData, nonce) {
+    const dataAsString =
+    previousBlockHash + nonce.toString() + JSON.stringify(currentBlockData);
+    const SHA_OBJ = new jsSHA("SHA-256","TEXT");
+    SHA_OBJ.update(dataAsString);
+    const hash = SHA_OBJ.getHash("HEX");
+    return hash;
+};
+
+Blockchain.prototype.proofOfWork = function(previousBlockHash, currentBlockData) {
+    let nonce = 0;
+    let hash = this.hashBlock(previousBlockHash, currentBlockData, nonce);
+    while (hash.substring(0, 4) !== "0000") {
+        nonce++;
+        //console.log(nonce);
+        hash = this.hashBlock(previousBlockHash, currentBlockData, nonce);
+    }
+    alert("nonce"+nonce);
+
+    return nonce;
+};
+
+function mining(bitcoin) {
+    //前のブロックを取得
+    const lastBlock = bitcoin.getLastBlock();
+    
+    //前のブロックハッシュを取得
+    //const previousBlockHash = lastBlock["hash"];
+    //６４ビット
+    const previousBlockHash = localStorage.Hash;
+    
+    //現在のブロックのデータ
+    const currentBlockData = {
+        transactions: bitcoin.pendingTransactions,
+        
+        index: lastBlock["index"] + 1
+    };
+    //console.log(bitcoin.pendingTransactions);
+    //Powでnonceを求める。
+    const nonce = bitcoin.proofOfWork(previousBlockHash, currentBlockData);
+    localStorage.nonce = nonce;
+    
+    //前回のブロックのハッシュ、今回のブロックのデータ、nonceを元にハッシュを求める
+    const blockHash = bitcoin.hashBlock(previousBlockHash, currentBlockData, nonce);
+    
+    //ブロックを生成
+    const newBlock = bitcoin.createNewBlock(nonce, previousBlockHash, blockHash);
+}
+
+function make_block(){
+    const RESULT = document.getElementById("result");
+    alert("トランザクションを生成します");
+    const bitcoin = new Blockchain();
+    var id1 = document.getElementById('001').value;
+    var element = document.getElementById( "target" ) ;
+    var radioNodeList = element.q1 ;
+    var name1 = radioNodeList.value ;
+    //var name1 = document.getElementById('002').value;
+
+    //トランザクション生成
+    alert(id1+name1);
+
+    bitcoin.createNewTransaction(id1, name1);
+    mining(bitcoin);
+    
+    console.log(bitcoin);
+    alert("ブロックを作成しました");
+    alert(JSON.stringify(bitcoin));
+    
+    //RESULT.textContent = JSON.stringify(bitcoin);
+    console.dir(bitcoin);
+
+    //前のブロックを取得
+    var lastBlock = bitcoin.getLastBlock();
+    //前のブロックハッシュを取得
+    var previousBlockHash = lastBlock["hash"];
+    localStorage.Hash = previousBlockHash;
+    alert(JSON.stringify(localStorage));
+    //document.querySelector("#result").innerHTML = JSON.stringify(localStorage.Hash);
+
+}
+
+
+
+</script>
+
+<script>
+    function dispText() {
+        var element = document.getElementById( "target" ) ;
+        var radioNodeList = element.q1 ;
+        var name1 = radioNodeList.value ;
+    var text = "ID：'" + document.formname.a001.value +
+            "'\n投票先の名前：'" + name1 +
+            "'\nnonce: '"+ localStorage.nonce +
+            "'\nPrevious Block Hash：'" + localStorage.Hash + "'"
+        
+
+        var blob = new Blob([text], { "type": "text/plain" });
+
+        //IEの場合
+        if (window.navigator.msSaveBlob) {
+        window.navigator.msSaveBlob(blob, "outFileFromWindows.txt");
+        //IE以外の場合
+        } else {
+        document.getElementById("createFile").href = window.URL.createObjectURL(blob);
+        }
+    }
+</script>
+
+</head>
+<!-- <body onload="init()"> -->
+<body>
+    <form name="formname" id="id_form" action="">
+    ID :  <input type="text" id="001" name="a001">
+    </br>
+    </form>
+    
+    <form id="target">
+    <p>投票先の名前 : <input type="radio" id="002" name="q1" value="長内創太郎">長内創太郎
+        <input type="radio" id="002" name="q1" value="田中太郎">田中太郎
+    </p>
+    <a id="createFile" href="#" download="outFile.txt" onclick="dispText();make_block();">投票する</a>
+    </form>
+
+  <div id="result"></div>
+</body>
+</html>
+
